@@ -1,0 +1,96 @@
+
+		 参照Linux kernel的代码编程规范
+
+1. Tabs键应该是8个字符，优点是8个字符容易阅读，并且明显的提示函数嵌套的深度
+2. switch的写法如下（switch和case的缩进应该保持在同一级别，也就是说在同一列上）：
+		switch (suffix) {
+		case 'G':
+		case 'g':
+				mem <<= 30;
+				break;
+		case 'M':
+		case 'm':
+				mem <<= 20;
+				break;
+		case 'K':
+		case 'k':
+				mem <<= 10;
+			/* fall through */
+		default:
+				break;
+	}
+3. 最好不要把多条表达式语句，或者赋值语句放在同一行，尽量避免模糊不清的表达式
+4. 代码行末尾最好不要刘空格，请使用优秀的编辑器，特别是在多行define语句中末尾有空格会编译不过
+
+		第二章 适当的换行
+5. 强烈建议每行最多为80列，如果行太长请拆分成多个有意义的片段，并且每一个片段要短于原来的语句且明显靠右
+		例如：	
+		if (condition)
+				printk(KERN_WARNING "Warning this is a long printk with "
+						"3 parameters a: %u b: %u "
+						"c: %u \n", a, b, c);
+						
+6. 大括号“{}“的放置，如果是if、 do、 switch等一些语句左括号在同一行，如果是函数应该另起一行
+例如：
+	语句：	do {
+				body of do-loop
+			} while (condition);
+		
+		
+		if (condition)
+			do_this();
+		else
+			do_that();
+		
+   函数： int function(int x)
+		{
+			body of function
+		}
+		
+7. c语言中关键字(if, switch, case, for, do, while)后面应该跟一个空格，但是在sizeof后面不应该
+跟一个空格，s = sizeof(struct file);推荐的写法，并且括号内部不要跟空格。
+关于指针类型的变量的一些写法：
+	char *linux_banner;
+	unsigned long long memparse(char *ptr, char **retptr);
+	char *match_strdup(substring_t *s);
+	
+在大多数二元或者三元操作符（=  +  -  <  >  *  /  %  |  &  ^  <=  >=  ==  !=  ?  :）的两侧加一个空格
+一元运算符不应该添加空格
+8. 分配内存时，传递接头体的大小时推荐的做法是 malloc(sizeof(*p),...);在sizeof直接使用结构体名的不仅降低了可读性，而且也可能引入了bug
+当结构体变量类型改变时。
+
+9. 多个语句的宏应该包含在do{} while(0)的语句块中
+
+10. 最好一行声明一个变量，这样余留的空白可以写注释为了
+
+11. 应该合理地使用goto语句使得函数可以集中退出
+例如：
+    int fun(int a)
+	{
+		int result = 0;
+		char *buffer;
+
+		buffer = kmalloc(SIZE, GFP_KERNEL);
+		if (!buffer)
+			return -ENOMEM;
+
+		if (condition1) {
+			while (loop1) {
+				...
+			}
+			result = 1;
+			goto out_buffer;
+		}
+		...
+	out_buffer:
+		kfree(buffer);
+		return result;
+	}
+	
+	
+12. 函数应该短小精悍，每个函数只完成一件事情，避免函数复杂化，函数的局部变量应该控制在10个之类
+ 否则应该考虑分割函数
+ 
+13.  合理地使用宏定义，比如计算数组的长度，结构体中成员的相对位置
+     	#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+        #define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))		
