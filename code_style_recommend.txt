@@ -34,7 +34,7 @@
 例如：
 	语句：	do {
 				body of do-loop
-			} while (condition);
+		} while (condition);
 		
 		
 		if (condition)
@@ -42,10 +42,10 @@
 		else
 			do_that();
 		
-   函数： int function(int x)
-		{
-			body of function
-		}
+   函数：int function(int x)
+	{
+		body of function
+	}
 		
 7. c语言中关键字(if, switch, case, for, do, while)后面应该跟一个空格，但是在sizeof后面不应该
 跟一个空格，s = sizeof(struct file);推荐的写法，并且括号内部不要跟空格。
