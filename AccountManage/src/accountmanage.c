@@ -87,7 +87,8 @@ int main(int argc, char *argv[])
 		return 0;
 }
 
-void List(int i){
+void List(int i)
+{
 		void (*func_listTab[])(void) = {
 				ListAllAccount, /*list all account info*/
 				ListAccount,    /*list specifical account*/	    
@@ -103,7 +104,8 @@ void List(int i){
 
 /* list all account information */
 
-void ListAllAccount() {
+void ListAllAccount() 
+{
 		p_account_node pnode;
 		pnode = headAccount;
 		int sum;
@@ -126,7 +128,8 @@ void ListAllAccount() {
 
 /*list a specifical account information*/
 
-void ListAccount() {
+void ListAccount() 
+{
 		p_account_node pnode;
 		char ID[10];
 	
@@ -146,7 +149,8 @@ void ListAccount() {
 }
 
 /*list a specifical account and which transaction record*/
-void ListTransaction(){
+void ListTransaction()
+{
 		p_account_node pnode;
 		p_node_log pnodelog;
 		char ID[10];
