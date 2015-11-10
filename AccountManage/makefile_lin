@@ -1,0 +1,26 @@
+#-------- variable define ------
+PRODUCT = accountmanage
+INC_DIR = ./include/
+SRC_DIR = ./src/
+OBJ_DIR = ./obj/
+BIN_DIR = ./bin/
+
+
+#-------- implict rule ------
+
+objects = $(OBJ_DIR)accountmanage.o $(OBJ_DIR)fm.o
+
+$(PRODUCT): $(objects)
+	cc -o  $(BIN_DIR)$(PRODUCT) -g $(objects)
+
+
+$(OBJ_DIR)accountmanage.o : $(INC_DIR)accountmanage.h $(INC_DIR)fm.h 
+	cc -c $(SRC_DIR)accountmanage.c -g -o $(OBJ_DIR)accountmanage.o 
+$(OBJ_DIR)fm.o : $(INC_DIR)fm.h $(INC_DIR)accountmanage.h
+	cc -c  $(SRC_DIR)fm.c -g -o $(OBJ_DIR)fm.o
+
+.PHONY: clean
+clean:
+	rm $(BIN_DIR)$(PRODUCT) $(objects)
+
+
