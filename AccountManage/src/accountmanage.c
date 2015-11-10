@@ -220,8 +220,8 @@ void Distory()
   	
 		if(pre_pnode != NULL) // not head of array ,rebinding arrays
 				pre_pnode->next = pnode->next; /*original pre_pnode->next* 
-												*  pointer to pnode*/
-        else
+								*  pointer to pnode*/
+        	else
 				headAccount = NULL;  //head of array     
     	 	
 		FreeLogs(pnode->nlog); //free 
