@@ -1,4 +1,3 @@
-
 #include <time.h>
 #include <assert.h>
 #include <stdio.h>
@@ -7,7 +6,7 @@
 #include <ctype.h>
 
 typedef struct dormitory {
-	char dormID[10];     /*dormitory ID*/
+        char dormID[10];     /*dormitory ID*/
         char StudentID[10];  /*student ID*/
         char Name[10];       /*student name*/
         char Date[15];       /*check in time*/
@@ -52,10 +51,9 @@ typedef int(*compar)(const void *, const void *);
 * msg:分配失败时，提示信息
 **/
 #define PNEW(p,c,msg,type) do{\
-	p = (type)malloc(c * sizeof(*(p)));\
-	if(!p)\
-		assert(!(msg));\
-	printf("sizeof(*p)=%d,sizeof(p)=%d,length=%d\n",sizeof(*p),sizeof(p),c);\
+		p = (type)malloc(c * sizeof(*(p)));\
+		if(!p)\
+			assert(!(msg));\
 }while(0) /*no trailing ;*/
 
 /*达到屏幕停顿效果*/
@@ -86,8 +84,9 @@ void findbydorid(void);
 void findbystdid(void);
 void findbynameid(void);
 
+pdormitory_node *prepare_sort(unsigned int *len);
+
 char *getcurdate(); //获得当前日期
-void print_usage();
 
 /**二分法查找函数 *
 * base: 查找数组(已有序)
@@ -97,13 +96,23 @@ void print_usage();
 * 返回值：匹配元素的个数*/
 int binary_search(void **base, void *val, void *pstart, int n, compar cmp);
 
-//插入排序
+//插入排序 O(n^2)
 void insert_sort(void **base, int len, compar cmp);
 void insert(pdormitory_node *parry,int pos, compar cmp);
-
-//冒泡排序
-void bubble_sort(void **base, int len, compar cmp);
 	
+//选择排序 O(n^2)
+void select_sort(void **base, int len, compar cmp);
+static int  selectmax(pdormitory_node *arry, int low, int high, compar cmp);
+
+//堆排序 O(n*lgn)
+void heap_sort(void **base, int len, compar cmp);
+static void build_heap(void **base, compar cmp, int len);
+static void heapily(void **ar, compar cmp, int idx, int max);
+
+/*计数排序 O(n) 不需要比较函数
+*元素只必须到有限的K个元素中得到，所以本案例不适用此排序算法 */
+
+
 /*compare rule: 0: equal to; less than 0: less than;
 		more than 0: more than;*/
 int compar_stuid(const void*, const void*);
@@ -133,16 +142,16 @@ int main(int argc, char* argv[])
 {
 	int menuID = 0;
 	static void (*fmenuarry[]) (void) = { 
-	     /* 0 */   exitsys, /* exit system */
-             /* 1 */   readfile,  /* read from local file */
-             /* 2 */   add,  /* add record */
-             /* 3 */   viewall, /* view all record */
-             /* 4 */   editdorm, /* edit specifical record */
-             /* 5 */   removeone, /* delete specific record */
-             /* 6 */   findbydorid,
-             /* 7 */   findbystdid,
-             /* 8 */   findbynameid,
-             /* 9 */   savefile   /* save data to file */
+	 /* 0 */   exitsys, /* exit system */
+         /* 1 */   readfile,  /* read from local file */
+         /* 2 */   add,  /* add record */
+         /* 3 */   viewall, /* view all record */
+         /* 4 */   editdorm, /* edit specifical record */
+         /* 5 */   removeone, /* delete specific record */
+         /* 6 */   findbydorid,
+         /* 7 */   findbystdid,
+         /* 8 */   findbynameid,
+         /* 9 */   savefile   /* save data to file */
 	}; /*array index must match menu ID index*/
 
 	printf("<%s> complie to %s\n\n",__FILE__, __DATE__);
@@ -171,7 +180,7 @@ int main(int argc, char* argv[])
 			continue;    // return main menu
 		}
 		fmenuarry[menuID]();  //call corresponds to function 
-	 }while(menuID != 0);
+	}while(menuID != 0);
 
 	return 0;
 }
@@ -290,7 +299,7 @@ void add()
         }
  
 	if(p != NULL) 
-  		*p = pdorm;
+  	*p = pdorm;
  
 	return pdorm;
 }
@@ -342,9 +351,9 @@ void readfile()
 	do {
 		memset(membufs, '0', sizeof(membufs));
 		/** trick: 为了提升数据读取性能，一次读取多个dormitory节点数据
-			*暂时存入到全局缓冲区membufs中*/
+		*暂时存入到全局缓冲区membufs中*/
 		cunt = fread(membufs, sizeof(struct dormitory), MEMBLOCK, fp); 	   
-				
+			
 		#if DEBUG
 		printf("buffer size=%d malloc size=%d\n\n", sizeof(membufs),\
 					sizeof(struct dormitory)*MEMBLOCK);
@@ -353,7 +362,7 @@ void readfile()
 		puts("\n\n");
 		#endif	
 
-     		if(ferror(fp)) {
+		if(ferror(fp)) {
 			perror("read file occur failed");
   	 		return;
   		}
@@ -379,26 +388,25 @@ void readfile()
 				#if DEBUG
            			printf("pdor_node[%d]\n\n",i);
 				#endif 	
-  	
-			}/*for*/
+  			}/*for*/
   	  
      			/** build up link relation with data elements node 
 			*eg: pdor_node[i].data ---> &pdor[i]	**/ 
 			for(i = 0; i<cunt; i++) {
         			memcpy(&pdor[i], pmembufs, offset);
-    	 			pmembufs += offset;  // pointer to next one 
-         			pdor_node[i].data = &pdor[i];  
+    				pmembufs += offset;  // pointer to next one 
+        			pdor_node[i].data = &pdor[i];  
     			}/*for*/
   	 
 			/*the series node insert into array head   
 			* pheadarry --> pdor_node(a serial of nodes)-- 
-				*   ---->pheadarry (original ) **/ 
-					
+			*   ---->pheadarry (original ) **/ 
+						
 			pdor_node[cunt-1].next = pheadarry;  
   			pheadarry = pdor_node;
 			arrayinfo.count += cunt; //记录节点个数
 			cunt = 0;  //计数器清空，以便下次使用
-			}/*if*/
+		}/*if*/
 	} while(!feof(fp));
 	
 	printf("read data completely! total data is:%d\n",arrayinfo.count);
@@ -439,8 +447,8 @@ void editdorm()
 	pdormitory_node *pfindary;
 	pdormitory_node *pary;
 	pdormitory temp;
+	findcunt = 0;
 	pary = search_account(&findcunt, &pindx);
-
 	if(findcunt == 0) {
 		PT("No match data\n");
 		PAUSERUN;
@@ -461,7 +469,6 @@ void editdorm()
 
 			PT("new student id=");
 			scanf("%s",temp->StudentID);
-
 			PT("new dormitory id=");
 			scanf("%s",temp->dormID);
 
@@ -474,7 +481,6 @@ void editdorm()
 			PT("-----updated information as below------\n");
 			PFTitle;
 			print_one_dormitory(temp);
-
 			arrayinfo.update = 1;  //标记信息已被修改
 		}/*if*/
 
@@ -485,8 +491,8 @@ void editdorm()
 
 out_edit:
 
-		if(pary)
-			free(pary);// free memeory
+	if(pary)
+		free(pary);// free memeory
 
 }
 
@@ -525,7 +531,7 @@ void removeone()
 		pfindary++;
 		findcunt--;
 	}/*while*/
-		
+	
 
 out_edit:
 
@@ -542,14 +548,14 @@ pdormitory_node *search_account(unsigned int *len, int *pstart)
 	dormitory keynode;
 	int  idx; //关键字匹配类型
 	int  findcunt; //根据关键字查找到匹配账户的个数
-			
-	PT("whether display all accounts(yes/no):");
+				
 	memset(askflg, 0, sizeof(askflg));
 	memset(keyword, 0, sizeof(keyword));
 	idx = findcunt = 0;
 
 	if(arrayinfo.count == 0)
 		return NULL; //没有有效数据
+	PT("whether display all accounts(yes/no):");
 	scanf("%s",askflg);
 	if (strcmp(askflg,"yes") == 0)
 		viewall(); //预览所有的账号信息
@@ -557,12 +563,10 @@ pdormitory_node *search_account(unsigned int *len, int *pstart)
 	PT("what keywords to find, as below? \n");
 	PT("\t [1] find by student id\n");
 	PT("\t [2] find by dormitory id\n");
-	PT("\t [3] find by check-in date\n");
-	PT("\t [4] find by student name\n");
+	PT("\t [3] find by student name\n");
 
 	PT("please input index ,as above:");
 	scanf("%d",&idx);
-
 	PT("please input keywords:");
 	scanf("%s",keyword);
 	findindx = 0;
@@ -573,16 +577,22 @@ pdormitory_node *search_account(unsigned int *len, int *pstart)
 		PT("choiced mode is [1] ,search by student id...\n");
 		strcpy(keynode.StudentID, keyword);
 		findcunt = binary_search((void**)pary, &keynode,\
-			         (void *)&findindx, arrayinfo.count, compar_stuid);
+		         (void *)&findindx, arrayinfo.count, compar_stuid);
 		break;
-	case 2:
+	case 2:  //by dormitory id
+		pary = sortbydorid(NULL); //pary数组按studentID有序
+		PT("choiced mode is [1] ,search by dormitory id...\n");
+		strcpy(keynode.dormID, keyword);
+		findcunt = binary_search((void**)pary, &keynode,\
+			(void *)&findindx, arrayinfo.count, compar_dormid);
 
 		break;
-	case 3:
-
-		break;
-	case 4:
-
+	case 3:  //student name
+		pary = sortbynameid(NULL); //pary数组按studentID有序
+		PT("choiced mode is [1] ,search by name...\n");
+		strcpy(keynode.Name, keyword);
+		findcunt = binary_search((void**)pary, &keynode,\
+			(void *)&findindx, arrayinfo.count, compar_nameid);
 		break;
 	default:
 		PT("input error,please input again\n");
@@ -593,16 +603,94 @@ pdormitory_node *search_account(unsigned int *len, int *pstart)
 		*pstart = findindx;
 		*len = findcunt;
 	}
+
 	return pary;
 }
 
 
 void findbydorid() 
 {
+	pdormitory_node *porder, *pidx; // order array  by studentID 
+	unsigned int count, finds;
+	int indx;           //first matched index
+	char dorid[10];
+	dormitory starget;
+
+	finds = indx = 0;
+	memset(dorid, 0, sizeof(dorid));
+	PT("please input you want to search dormitory ID:");
+	scanf("%s",dorid);
+	strcpy(starget.dormID, dorid);
+	pidx = NULL;
+
+	porder = sortbydorid(&count); 
+	if(!porder) {//no data
+		PT("No data\n");
+		goto out_work;
+	}
+	finds = binary_search((void**)porder, &starget, (void *)&indx, count, compar_dormid);
+	if(finds == 0) {
+		PT("No matched\n");
+		goto out_work;
+	}else {//有元素找到，输出全部
+		pidx = &porder[indx];
+		printf("has %d elements ,as below\n", finds);
+		PFTitle;
+		while(finds > 0) {
+			print_one_dormitory((*pidx)->data);
+			pidx++;
+			finds--;
+		}/*while*/
+	}
+
+out_work:
+	if(!porder)
+		free(porder);
+
+	PAUSERUN;
 
 }
-void findbynameid(void) {
-	
+void findbynameid(void)
+{
+	pdormitory_node *porder, *pidx; 
+	unsigned int count, finds;
+	int indx;           //first matched index
+	char name[10];
+	dormitory starget;
+
+	finds = indx = 0;
+	memset(name, 0, sizeof(name));
+	PT("please input you want to search name:");
+	scanf("%s",name);
+	strcpy(starget.Name, name);
+	pidx = NULL;
+	porder = sortbydorid(&count); 
+	if(!porder) {//no data
+		PT("No data\n");
+		goto out_work;
+	}
+	finds = binary_search((void**)porder, &starget, (void *)&indx, count, compar_nameid);
+	if(finds == 0) {
+		PT("No matched\n");
+		goto out_work;
+	}else {//有元素找到，输出全部
+		pidx = &porder[indx];
+		printf("has %d elements ,as below\n", finds);
+		PFTitle;
+		while(finds > 0) {
+			print_one_dormitory((*pidx)->data);
+			pidx++;
+			finds--;
+		}/*while*/
+	}
+
+out_work:
+	if(!porder)
+		free(porder);
+
+	PAUSERUN;
+
+
 }
 
 void findbystdid() 
@@ -637,7 +725,7 @@ void findbystdid()
 			pidx++;
 			finds--;
 		}/*while*/
-	}/*else*/
+	}
 
 out_work:
 	if(!porder)
@@ -664,46 +752,66 @@ int binary_search(void **base, void *val, void *pstart, int n, compar cmp)
 		return 0;
 	}
 	if(!(*pbase))  
-		return 0; //数组为空
-	assert(pbase && *pbase);//保证要查找的数组不为空
-	while(low<=high) {
-		mid = (low+high)/2;
-		if(cmp(pbase[mid],pval) == 0) {//已找到，前后搜索，检查是否有重复值
-			for(fmid=mid-1; (fmid>=low) && cmp(pbase[fmid],pval)==0;)
-				fmid--; //before search
-			for(nmid=mid+1;(nmid<=high) && cmp(pbase[nmid],pval)==0;)
-				nmid++; //behind search
-			fmid++; // the first match
-			nmid--; //the last match
-			matchs = (nmid-fmid)+1;//number of match
-			*(int*)pstart = fmid;	
-			return matchs;
+				return 0; //数组为空
+		assert(pbase && *pbase);//保证要查找的数组不为空
+		while(low<=high) {
+			mid = (low+high)/2;
+			if(cmp(pbase[mid],pval) == 0) {//已找到，前后搜索，检查是否有重复值
+				for(fmid=mid-1; (fmid>=low) && cmp(pbase[fmid],pval)==0;)
+					fmid--; //before search
+				for(nmid=mid+1;(nmid<=high) && cmp(pbase[nmid],pval)==0;)
+					nmid++; //behind search
+				fmid++; // the first match
+				nmid--; //the last match
+				matchs = (nmid-fmid)+1;//number of match
+				*(int*)pstart = fmid;	
+				return matchs;
 
-		}else if (cmp(pbase[mid],pval) < 0) {
-			low = mid + 1;		
+			}else if (cmp(pbase[mid],pval) < 0) {
+				low = mid + 1;		
 
-		}else {
-			high = mid - 1;
-		}	
-	}/* while */
+			}else {
+				high = mid - 1;
+			}	
+
+		}/* while */
 	return 0; //没有找到匹配的返回0
 } 
 
-pdormitory_node *sortbystdid(unsigned int *len)
+pdormitory_node *sortbydorid(unsigned int *len)
 {
-	pdormitory_node *array_stdid, *p;
+	pdormitory_node  *ar;
+	int i;
+	unsigned int n;
+	ar = prepare_sort(&n);
+	if(!ar)
+		return NULL;
+
+	if(len)
+		*len = n;
+	//采用堆排序法，对数组排序
+	heap_sort((void**)ar, n-1, compar_dormid);
+
+	#if DEBUG
+	PT("sort after by dormitory ID\n");
+	for(i = 0; i < n; i++)
+		print_one_dormitory(ar[i]->data);
+	#endif
+	return ar;
+}
+
+pdormitory_node *prepare_sort(unsigned int *len)
+{
+	pdormitory_node *pary;
 	pdormitory_node ptmp;
 	unsigned int n;
 	int i;
 
-	//取得 pdormitory 类型的数组
-	n = create_one_array(&array_stdid);
+	//取得 pdormitory_node 类型的数组
+	n = create_one_array(&pary);
+	*len = n;
 	if(n == 0)
-		return NULL; //没有数据
-	p = array_stdid;
-	if (len)   //len不为时，记录账号总数
-		*len = n;
-
+			return NULL; //没有数据
 	ptmp = pheadarry;
 	if(!ptmp) {
 		PT("No data to sort\n");
@@ -712,23 +820,159 @@ pdormitory_node *sortbystdid(unsigned int *len)
 
 	for(i = 0; ptmp; ptmp = ptmp->next,i++)
 		if(ptmp->dvalid)	
-	p[i] = ptmp; //数组元素赋值
+			pary[i] = ptmp; //数组元素赋值
 	
 	#if DEBUG
-	PT("sort before by student ID\n");
-	for(p = array_stdid, i = 0; i < n; i++)
-		print_one_dormitory(p[i]->data);
+	PT("sort before \n");
+	for(i = 0; i < n; i++)
+		print_one_dormitory(pary[i]->data);
 	#endif
 
+	return pary;
+}
+
+pdormitory_node *sortbynameid(unsigned int *len)
+{
+	pdormitory_node  *ar;
+	unsigned int i, n;
+
+	ar = prepare_sort(&n);
+	if(!ar)
+		return NULL;
+	if(len)
+		*len = n;
+
+	//采用选择排序法，对数组排序
+	select_sort((void**)ar, n, compar_nameid);
+
+	#if DEBUG
+	PT("sort after by name \n");
+	for(i = 0; i < n; i++)
+		print_one_dormitory(ar[i]->data);
+	#endif
+	return ar;
+
+}
+
+
+pdormitory_node *sortbystdid(unsigned int *len)
+{
+	pdormitory_node  *ar;
+	unsigned int i, n;
+
+	ar = prepare_sort(&n);
+	if(!ar)
+		return NULL;
+	if(len)
+		*len = n;
+
 	//采用插入排序法，对数组排序
-	insert_sort((void**)array_stdid, n, compar_stuid);
+	insert_sort((void**)ar, n, compar_stuid);
 
 	#if DEBUG
 	PT("sort after by student ID\n");
-	for(p = array_stdid, i = 0; i < n; i++)
-		print_one_dormitory(p[i]->data);
+	for(i = 0; i < n; i++)
+		print_one_dormitory(ar[i]->data);
 	#endif
-	return array_stdid;
+	return ar;
+}
+
+
+void select_sort(void **base, int len, compar cmp)
+{
+	pdormitory_node *pbase;
+	pdormitory_node temp; //临时值作为交换用
+	int i;
+	int maxpos; //最大元素在数组中的位置
+
+	i = len-1;
+	pbase = (pdormitory_node *)base;
+
+	//重复选择pbase[0, i]中最大的值，并放到合适的位置
+	for(; i >= 1; i--) {
+		maxpos = selectmax(pbase, 0, i, cmp);
+		if(maxpos != i) {
+			temp = pbase[maxpos];
+			pbase[maxpos] = pbase[i];
+			pbase[i] = temp;
+		}/*if*/
+	}/*for*/
+}
+
+static int selectmax(pdormitory_node *array, int low, int high, compar cmp)
+{
+	int maxpos; //最大元素的位置
+	int i;
+	i = maxpos = low;
+
+	while (i <= high) {
+		if(cmp(array[i], array[maxpos]) > 0)
+			maxpos = i;
+	}
+	return maxpos;
+}
+
+void heap_sort(void **base, int len, compar cmp)
+{
+	int i;
+	pdormitory_node maxval;
+
+	if(len < 1) { //元素个数少于1没必要排序
+		PT("array is empty\n");
+		return ;
+	}
+
+	PT("\n sort functiong---heap sort\n\n");
+	build_heap(base, cmp, len); //建大根堆
+	/*将每个根节点移动到数组最后一个位置，且在堆排序中移除该元素*/
+	for(i = len; i >= 1; i--) {
+		maxval = (pdormitory_node)base[0];
+		base[0] = base[i];
+		base[i] = maxval;
+
+		heapily(base, cmp, 0, i-1);//从堆的根节点开始，逐步检查，保持大根堆特性
+	}
+
+}
+
+static void build_heap(void **base, compar cmp, int len)
+{
+	int i;
+	//len 是数组下表，数组下表从0开始
+	for (i = len/2; i >= 0 ; i--)
+		heapily(base, cmp, i, len);
+
+}
+
+static void heapily(void **ar, compar cmp, int idx, int max)
+{
+	int left , right; //左，右孩子节点
+	int largest;
+	pdormitory_node temp;
+	pdormitory_node *par;
+
+	par = (pdormitory_node*)ar;
+	left = 2*idx + 1; //idx 节点的左孩子
+	right = 2*idx + 2; //idx 节点的右孩子
+
+	/* 在ar[idx], ar[right], ar[left]中找到最大的值*/
+	
+	if(max >= left && cmp(par[left], par[idx]->data) > 0) 
+		largest = left;
+	else
+		largest = idx;
+
+	if(max >= right && cmp(par[right], par[largest]->data) > 0)
+		largest = right;
+
+	/*如果最大的节点不是父节点，那么交换元素并递归执行*/
+	if(largest != idx) {
+		temp = (pdormitory_node)par[idx];
+		par[idx] = par[largest];
+		par[largest] = temp;
+		heapily(ar, cmp, largest, max);  //递归，保持堆特性
+	}
+
 }
 
 void insert_sort(void **base, int len, compar cmp)
@@ -814,22 +1058,14 @@ void savefile()
 	PT("Press Enter to continue\n");
 }
 
-void print_usage()
-{
-	PT("<dormitorymanage verbose> is debug mode that can display detail \n");
-	PT("<dromitorymanage > is normal mode\n");
-}
-
-
 void print_all_dormitory(pdormitory_node p)
 {
 	pdormitory_node tmp = p;
         PFTitle;
 	while(tmp) {
 		if(tmp->dvalid) 
-		print_one_dormitory(tmp->data);
+			print_one_dormitory(tmp->data);
 				
-
 		#if DEBUG 
 		if(!tmp->dvalid) {
 			PT("\t\t \n<----- invaild data ----->\n");
@@ -838,6 +1074,7 @@ void print_all_dormitory(pdormitory_node p)
 			PT("\t\t <-----------end------------->\n");
 		}
 		#endif
+
 		tmp = tmp->next;	
 	}/*while*/
 }
@@ -851,3 +1088,4 @@ void print_one_dormitory(pdormitory p)
 	puts("\n");
 
 }
+
