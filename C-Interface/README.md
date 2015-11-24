@@ -10,3 +10,5 @@ ______________________
 ####Table
 >**Table(哈希表):**  是一组**key-value**对的集合，table的使用场景十分广泛。**key、value**可以是任何类型的数据。
 [table.c](/C-Interface/table/table.c "table 文件夹")提供了一些常用的实现
+
+![table](C-Interface/table/img/table_2.jpg "table 结构")
