@@ -3,10 +3,6 @@
 #include <stdlib.h>
 #include "table.h"
 
-typedef int (*comparator)(const void *x, const void *y); /*定义一个比较器类型*/
-typedef unsigned int (*hashfuc)(const void *key);/*定义一个hash函数类型*/
-
-
 static int cmpdef(const void *x, const void *y)
 {
 	return x != y; //不关心x与y的顺序,只判断是否相同
