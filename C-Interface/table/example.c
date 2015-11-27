@@ -8,7 +8,8 @@
 #include "table.h"
 
 void ws(char *name, FILE *fp);
-void cmp(const void *x, const void *y);
+static int cmpstring(const void *x, const void *y);
+static unsigned int hashcode(const void *key);
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +50,7 @@ void ws(char *name, FILE *fp)
 	word = NULL;
 	ar = NULL;
 	memset(buf, 0, sizeof(buf));
-	table = table_new(0, NULL, NULL);
+	table = table_new(0, cmpstring, hashcode);
 	
 	while(getword(fp, buf, sizeof(buf))) {
 		word = (char *) calloc(1, strlen(buf) + 1);
@@ -69,9 +70,9 @@ void ws(char *name, FILE *fp)
 	
 	if(name)
 		printf("%s:\n",name);
-	
+        printf("table has keys:%d\n", table_length(table));	
 	ar = table_to_array(table, NULL);
-	qsort(ar, table_length(table), 2 * sizeof(*ar), cmp);
+	qsort(ar, table_length(table), 2 * sizeof(*ar), cmpstring);
 	for(i = 0; ar[i]; i += 2) {
 		printf("%d\t%s\n", *(int *)ar[i+1], (char *)ar[i]);
 		
@@ -80,9 +81,27 @@ void ws(char *name, FILE *fp)
 
 }
 
-void cmp(const void *x, const void *y)
+int cmpstring(const void *x, const void *y)
 {
+	printf("cmpstring:<%s> cmp <%s> = %d\n",*(char **)x,\
+		 *(char **)y, strcmp(*(char **)x, *(char **)y) );
 	return strcmp(*(char **)x, *(char **)y);
 
 }
 
+static unsigned int hashcode(const void *key) 
+{
+	unsigned int h;
+	int len;
+        int i;
+	const char *val;
+	val = (char *)key;
+	len = strlen((const char *)key);
+	h = 0;
+	for(i = 0; i < len; i++) 
+		h = 31 * h + val[i];
+
+	printf("hascode:<%s>:%d:=%u\n",(char *)key, len, h);
+	return h;
+
+}
