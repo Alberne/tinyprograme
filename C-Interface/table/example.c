@@ -10,6 +10,7 @@
 void ws(char *name, FILE *fp);
 static int cmpstring(const void *x, const void *y);
 static unsigned int hashcode(const void *key);
+int cmp(const void *x, const void *y);
 
 int main(int argc, char *argv[])
 {
@@ -72,7 +73,7 @@ void ws(char *name, FILE *fp)
 		printf("%s:\n",name);
         printf("table has keys:%d\n", table_length(table));	
 	ar = table_to_array(table, NULL);
-	qsort(ar, table_length(table), 2 * sizeof(*ar), cmpstring);
+	qsort(ar, table_length(table), 2 * sizeof(*ar), cmp);
 	for(i = 0; ar[i]; i += 2) {
 		printf("%d\t%s\n", *(int *)ar[i+1], (char *)ar[i]);
 		
@@ -83,8 +84,14 @@ void ws(char *name, FILE *fp)
 
 int cmpstring(const void *x, const void *y)
 {
-	printf("cmpstring:<%s> cmp <%s> = %d\n",*(char **)x,\
-		 *(char **)y, strcmp(*(char **)x, *(char **)y) );
+	printf("cmpstring:<%s> cmp <%s> = %d\n",(char *)x,\
+		 (char *)y, strcmp((const char *)x, (const char *)y) );
+	return strcmp((const char *)x, (const char *)y);
+
+}
+
+int cmp(const void *x, const void *y)
+{
 	return strcmp(*(char **)x, *(char **)y);
 
 }
