@@ -1,16 +1,29 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 #include "table.h"
+
 
 static int cmpdef(const void *x, const void *y)
 {
-	return x != y; //不关心x与y的顺序,只判断是否相同
+	//return x != y; //不关心x与y的顺序,只判断是否相同
+	return strcmp((const char *)x, (const char *)y);
 }
 
 static unsigned int  hashcode(const void *key)
 {
-	return  (unsigned int)key>>2;  //key地址右移
+	unsigned int h;
+	int len;
+        int i;
+	const char *val;
+	val = (char *)key;
+	len = strlen((const char *)key);
+	h = 0;
+	for(i = 0; i < len; i++) 
+		h = 31 * h + val[i];
+
+	return h;
 }
 
 /*表元素节点*/
