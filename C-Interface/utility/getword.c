@@ -13,7 +13,7 @@ int getword(FILE *fp, char *buf, int size)
 	
 	/*jump over the spaceing of word before*/
 	for(; c != EOF; c = getc(fp))
-		if(isalpha(c)) {
+		if(!isspace(c)) {
 			if(i < size -1 ) {
 				buf[i++] = c;
 			}/*if*/
@@ -21,7 +21,7 @@ int getword(FILE *fp, char *buf, int size)
 		}/*if*/
 
 	/*read one word*/
-	for(c = getc(fp); c != EOF && (isalpha(c) || c == '_'); c = getc(fp)) {
+	for(c = getc(fp); c != EOF && (!isspace(c)); c = getc(fp)) {
 		if(i < size -1)
 			buf[i++] = c;
 

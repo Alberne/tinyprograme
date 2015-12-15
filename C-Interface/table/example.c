@@ -6,6 +6,7 @@
 #include <errno.h>
 #include "../utility/getword.h"
 #include "table.h"
+#include "../MemoryManage/mem.h"
 
 void ws(char *name, FILE *fp);
 static int cmpstring(const void *x, const void *y);
@@ -51,10 +52,10 @@ void ws(char *name, FILE *fp)
 	word = NULL;
 	ar = NULL;
 	memset(buf, 0, sizeof(buf));
-	table = table_new(0, cmpstring, hashcode);
+	table = table_new(4096, cmpstring, hashcode);
 	
 	while(getword(fp, buf, sizeof(buf))) {
-		word = (char *) calloc(1, strlen(buf) + 1);
+		word = (char *) mem_calloc(1, strlen(buf) + 1);
 		assert(word);
 		strcpy(word, buf);		
 		
@@ -62,7 +63,7 @@ void ws(char *name, FILE *fp)
 		if(count) {
 			(*count)++;
 		}else {
-			count = (int *) calloc(1, sizeof(*count));
+			count = (int *) mem_calloc(1, sizeof(*count));
 			assert(count);
 			*count = 1;
 			table_put(table, word, count);	
@@ -84,7 +85,7 @@ void ws(char *name, FILE *fp)
 
 int cmpstring(const void *x, const void *y)
 {
-	printf("cmpstring:<%s> cmp <%s> = %d\n",(char *)x,\
+//	printf("cmpstring:<%s> cmp <%s> = %d\n",(char *)x,\
 		 (char *)y, strcmp((const char *)x, (const char *)y) );
 	return strcmp((const char *)x, (const char *)y);
 
@@ -108,7 +109,7 @@ static unsigned int hashcode(const void *key)
 	for(i = 0; i < len; i++) 
 		h = 31 * h + val[i];
 
-	printf("hascode:<%s>:%d:=%u\n",(char *)key, len, h);
+//	printf("hascode:<%s>:%d:=%u\n",(char *)key, len, h);
 	return h;
 
 }
