@@ -17,4 +17,5 @@ ______________________
 ####MemoryManage
 >**MemoryManage(内存分配器)：** 通过**哈希表**来统一管理内存块，另外，使用*`freelist`*静态链表来管理空闲的内存块，内存块一
 旦被系统分配之后，就不再释放。程序使用完后将存放到*`freelist`*链表中，以备再次使用。[mem.c](/C-Interface/MemoryManage/mem.c "")提供了常用的实现。对于反复使用内存的程序来说，该 **内存分配器**可以显著提高程序性能，而且易于管理。
+
 ![memorymanage](/C-Interface/MemoryManage/memorycalloter.jpg "快照")
