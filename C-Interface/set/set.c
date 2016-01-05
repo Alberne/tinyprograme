@@ -16,7 +16,7 @@ static unsigned int  hashcode(const void *key)
 {
 	unsigned int h;
 	int len;
-    int i;
+        int i;
 	const char *val;
 	val = (char *)key;
 	len = strlen((const char *)key);
@@ -115,7 +115,7 @@ void set_put(struct set_t *set, const void *member)
 		
 		//链表头插法,将p加入到set中
 		p->next = set->buckets[i]; 
-	    set->buckets[i] = p;
+       	        set->buckets[i] = p;
 		set->length++;
 		set->snapshot++; //set修改记录
 	}
@@ -216,11 +216,123 @@ void **set_toarray(struct set_t *set, const void *end)
 	return ar;
 }
 
-static struct set_t *copy(struct set_t *t, ) 
+/*将集合t复制到一个新的集合set中并返回,
+*@parm sz:不是集合元素的大小，而是集合结构中buckets(也就是t->size)的大小
+*/
+static struct set_t *copy(struct set_t *t, int sz) 
 {
+	struct set_t *set;
+	int i;
+	int h;
+	struct member_set *p;
+	struct member_set *pnew;
 	
+	assert(t);
+	set = set_new(sz, t->cmp, t->hash);
 	
+	//集合t中的元素复制到set集合中
+	for(i = 0; i < t->size; i++) {
+		for(p = t->buckets[i]; p; p = p->next) {
+			h = (*set->hash)(p->member) % set->size; 
+			pnew = (struct member_set *)calloc(1, sizeof(*pnew));
+			assert(pnew);
+			pnew->member = p->member;
+			//链表头插法
+			pnew->next = set->buckets[i];
+			set->buckets[i] = pnew;
+			set->length++;
+			
+		}/*for*/
+		
+	}/*for*/
 	
+	return set;
 }
+
+ /*     +-------------------------------+
+        |   下面是几种常见的集合运算    |
+	+-------------------------------+
+	| 并集(s+t) : set_union         |
+	| 交集(s*t) : set_inter         |
+	| 差集(s-t) : set_minus         |
+	| 称差集(s/t): set_diff         |
+	+-------------------------------+         */
+
+
+/*求集合t与集合s的并集(t + NULL = t; NULL + s = s)
+*  如果t和s都为NULL,则抛出运行时异常
+*/
+struct set_t *set_union(struct set_t *t, struct set_t *s) 
+{
+	struct member_set *p;
+	struct set_t *set;
+	int arith_max;  //s与t中最大的buckets数
+	int i;
+	
+	if(t == NULL) { //NULL + s = s
+		assert(s);
+		set = copy(s, s->size);
+	}else if(s == NULL) { //t + NULL = t
+		set = copy(t, t->size);
+	}else {  // t + s
+		//保证两个集合的比较算法,和哈希算法相同(指向同一个函数)
+		assert(s->cmp == t->cmp && s->hash == t->hash);
+		arith_max = (t->size > s->size) ? t->size : s->size;
+		set = copy(s, arith_max);//将s复制到新的集合ret中
+		
+		for(i = 0; i < t->size; i++)
+			for(p = t->buckets[i]; p; p = p->next) 
+				set_put(set, p->member); //将t中的元素复制到ret中
+	}/*else*/
+	
+	return set;
+}
+
+/*求集合s与集合t的交集(s*NULL = NULL; NULL*t = NULL)
+* (s*t :s与t中共有的元素) */
+struct set_t *set_inter(struct set_t *s, struct set_t *t) 
+{
+	struct set_t *set;
+	struct member_set *q, *pnode;
+	const void *member;
+	int i;
+	int h;
+	int arith_min; //s与t中最小的buckets数
+	
+	if(s == NULL) { //t*NULL = NULL
+		assert(t);
+		set = set_new(t->size, t->cmp, t->hash);
+	}else if(t == NULL) { //s*NULL = NULL
+		set = set_new(s->size, s->cmp, s->hash);
+	}else if(s->length > t->length) {
+		set = set_inter(t, s);
+	}else {
+		//保证两个集合的比较算法,和哈希算法相同(指向同一个函数)
+		assert(s->cmp == t->cmp && s->hash == t->hash);
+		arith_min = (s->size > t->size) ? t->size : s->size;
+		//set 是新建的空集合,buckets取两(s,t)者最小
+		set = set_new(arith_min, s->cmp, s->hash);
+		
+		//循环遍历较大的集合,查找两个集合中共有的元素
+		for(i = 0; i < t->size; i++) 
+			for(q = t->buckets[i]; q; q = q->next) {
+				if(set_member(s, q->member)) { //集合s中是否存在该元素
+					member = q->member;
+					h = (*set->hash)(member) % set->size;
+					pnode = (struct set_member*)calloc(1, *pnode);
+					assert(pnode);
+					pnode->member = member;
+					
+					pnode->next = set->buckets[i]; //链表头插法
+					set->buckets[i] = pnode;
+					set->length++;
+				}/*if*/
+			}/*for*/
+		
+	}/*else*/
+	return set;	
+}
+
+
 
 
