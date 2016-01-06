@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
+#include <limits.h>
+#include "set.h"
 
 typedef int (*comparator)(const void *x, const void *y); /*定义一个比较器类型*/
 typedef unsigned int (*hashfuc)(const void *key);/*定义一个hash函数类型*/
@@ -9,7 +12,7 @@ typedef unsigned int (*hashfuc)(const void *key);/*定义一个hash函数类型*
 //该比较器,只能判断x & y是否为同一块内存区
 static int cmpdef(const void *x, const void *y)
 {
-	return x != y; //不关心x与y的顺序,只判断是否相同
+	return strcmp((const char *)x, (const char *)y);
 }
 
 static unsigned int  hashcode(const void *key)
@@ -28,7 +31,7 @@ static unsigned int  hashcode(const void *key)
 	return h;
 }
 
-typedef struct member_set;
+//struct member_set;
 struct set_t {
 	int length; //集合的大小
 	int size;  //集合索引的大小
@@ -45,7 +48,7 @@ struct set_t {
 /*新建一个集合表,该集合没有元素，只有集合索引list*/
 struct set_t *set_new(int sz, comparator cp, hashfuc hs)
 {
-	struct set_t set;
+	struct set_t *set;
 	int i;
 	
 	static int prime[] = {509, 509, 1021, 2053, 4093,
@@ -158,15 +161,14 @@ void set_free(struct set_t **pset)
 	struct member_set *p, *q;
 	
 	assert(pset && *pset);
-	
 	//集合存在元素,释放集合中的元素
-	if((*set->length) > 0) {
+	if(((*pset)->length) > 0) {
 		//分别释放每个buckets中的元素
 		for(i = 0; i < (*pset)->size; i++) 
 			for(p = (*pset)->buckets[i]; p; ) {
 				q = p->next;
 				free(p);
-				p = q
+				p = q;
 			}/*for*/
 		
 	}/*if*/
@@ -189,7 +191,7 @@ void set_map(struct set_t *set,\
 	stmp = set->snapshot;
 	
 	for(i = 0; i < set->size; i++) 
-		for(p = set->buckets[i]; p = p->next) {
+		for(p = set->buckets[i]; p; p = p->next) {
 			apply(p->member, c);
 			assert(set->snapshot == stmp); //保证,set集合在此操作时没有被外部程篡改
 		}/*for*/
@@ -205,7 +207,7 @@ void **set_toarray(struct set_t *set, const void *end)
 	
 	assert(set);
 	j = 0;
-	ar = calloc((set->length + 1) * sizeof(*ar));
+	ar =(void **)calloc(1, (set->length + 1) * sizeof(*ar));
 	//将集合中所有的元素存储在数组ar中
 	for(i = 0; i < set->size; i++) 
 		for(p = set->buckets[i]; p; p = p->next) {
@@ -238,8 +240,8 @@ static struct set_t *copy(struct set_t *t, int sz)
 			assert(pnew);
 			pnew->member = p->member;
 			//链表头插法
-			pnew->next = set->buckets[i];
-			set->buckets[i] = pnew;
+			pnew->next = set->buckets[h];
+			set->buckets[h] = pnew;
 			set->length++;
 			
 		}/*for*/
@@ -255,13 +257,15 @@ static struct set_t *copy(struct set_t *t, int sz)
 	| 并集(s+t) : set_union         |
 	| 交集(s*t) : set_inter         |
 	| 差集(s-t) : set_minus         |
-	| 称差集(s/t): set_diff         |
+	| 对称差集(s/t): set_diff        |
 	+-------------------------------+         */
 
 
-/*求集合t与集合s的并集(t + NULL = t; NULL + s = s)
-*  如果t和s都为NULL,则抛出运行时异常
-*/
+/*求集合t与集合s的并集分别有以下三种情况:
+* 1. t + NULL = t
+* 2. NULL + s = s
+* 3. 如果t和s都为NULL,则抛出运行时异常
+* @return:以上结果添加到一个新的集合*/
 struct set_t *set_union(struct set_t *t, struct set_t *s) 
 {
 	struct member_set *p;
@@ -288,8 +292,11 @@ struct set_t *set_union(struct set_t *t, struct set_t *s)
 	return set;
 }
 
-/*求集合s与集合t的交集(s*NULL = NULL; NULL*t = NULL)
-* (s*t :s与t中共有的元素) */
+/*求集合s与集合t的交集分别有以下三种情况:
+* 1. s * NULL = NULL
+* 2. NULL * t = NULL
+* 3. s * t :s与t中共有的元素
+* @return:以上结果添加到一个新的集合*/
 struct set_t *set_inter(struct set_t *s, struct set_t *t) 
 {
 	struct set_t *set;
@@ -319,12 +326,12 @@ struct set_t *set_inter(struct set_t *s, struct set_t *t)
 				if(set_member(s, q->member)) { //集合s中是否存在该元素
 					member = q->member;
 					h = (*set->hash)(member) % set->size;
-					pnode = (struct set_member*)calloc(1, *pnode);
+					pnode = (struct member_set*)calloc(1, sizeof(*pnode));
 					assert(pnode);
 					pnode->member = member;
 					
-					pnode->next = set->buckets[i]; //链表头插法
-					set->buckets[i] = pnode;
+					pnode->next = set->buckets[h]; //链表头插法
+					set->buckets[h] = pnode;
 					set->length++;
 				}/*if*/
 			}/*for*/
@@ -334,5 +341,80 @@ struct set_t *set_inter(struct set_t *s, struct set_t *t)
 }
 
 
+/*求集合t与集合s的差集分别有以下三种情况:
+* 1. t - NULL = t
+* 2. NULL - s = NULL
+* 3. t - s: t不在s中的元素
+* @return:以上结果添加到一个新的集合*/
+struct set_t *set_minus(struct set_t *t, struct set_t *s) 
+{
+	struct set_t *set;
+	struct member_set *pset_member;
+	struct member_set *pnew_member;
+	const void *member;
+	int i;
+	int h;
+	int arith_min;     //差集的buckets大小,取较小的更为合理
+	if(t == NULL) {    // NULL-s = NULL
+		assert(s);
+		set = set_new(s->size, s->cmp, s->hash);
+	}else if(s == NULL) {      //t-NULL = t
+		set = copy(t, t->size);  //将t集合复制到新的集合set中
+	}else {          //t和s都不为空时,t不在s中的元素,添加到一个新的集合
+		arith_min = (t->size > s->size) ? s->size : t->size;
+		//保证两个集合的比较算法,和哈希算法相同(指向同一个函数)
+		assert(s->cmp == t->cmp && s->hash == t->hash);
+		set = set_new(arith_min, t->cmp, t->hash);
+		
+		for(i = 0; i < t->size; i++)    //循环遍历集合t
+			for(pset_member = t->buckets[i]; pset_member;\
+                                                    pset_member = pset_member->next) {
+				if(!set_member(s, pset_member->member)) {    //pset_member元素不在s中
+					pnew_member = (struct member_set*)calloc(1, sizeof(*pnew_member));
+					assert(pnew_member);
+					member = pset_member->member;
+					h = (*set->hash)(member) % set->size;
+					pnew_member->member = member;
+					
+					//链表头插法
+					pnew_member->next = set->buckets[h];
+					set->buckets[h] = pnew_member;
+					set->length++;
+				}/*if*/				   
+			}/*for*/	
+	}/*else*/
+	return set;	
+}
+
+/*求集合s与t的对称差集,分别有以下三种情况:
+* 1.  t / NULL = t
+* 2.  NULL / s = s
+* 3.  t / s = (t-s) + (s-t),即s不在t中的元素和t不在s中的元素的并集
+* @return:以上结果添加到一个新的集合*/
+struct set_t *set_diff(struct set_t *t, struct set_t *s)
+{
+	struct set_t *set;
+	struct set_t *set_minus_s; /* t-s 的差集*/
+	struct set_t *set_minus_t; /* s-t 的差集*/
+	int arith_min;
+	
+	if(s == NULL) {              /* t / NULL = t */
+		assert(t);
+		set = copy(t, t->size);
+	}else if(t == NULL) {        /* NULL / s = s */
+		set = copy(s, s->size);
+	}else {                     /* t / s = (t-s) + (s-t) */
+		arith_min = (s->size < t->size) ? s->size : t->size;
+		//保证两个集合的比较算法,和哈希算法相同(指向同一个函数)
+		assert(s->cmp == t->cmp && s->hash == t->hash);
+		set_minus_s = set_minus(t, s);   /*求差集(t-s)*/
+		set_minus_t = set_minus(s, t);   /*求差集(s-t)*/
+		set = set_union(set_minus_s, set_minus_t); /* 求并集(t-s) + (s-t) */
+	}
+	
+	set_free(&set_minus_t); //释放set_minus_s
+	set_free(&set_minus_s); //释放set_minus_t
+	return set;
+}
 
 
