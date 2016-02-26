@@ -104,10 +104,70 @@ int bit_count(struct bit_t *bit_set)
 	return count;
 }
 
+/*取得第n个比特位的值*/
+int bit_get(struct bit_t *bit_set, int n)
+{
+	int byte_val = 0;
+	assert(bit_set);
+	assert(n >= 0 && n < bit_set->length);
+	/*n的bit位置在第(n/8)个字节中,第(n%8)的位置，但是bit位是右向左排列*/
+	byte_val = (bit_set->bytes[n/8]>>(n%8)) & 0x1;//最右一位bit
+	return byte_val;
+}
 
 
 
+/*设置第n位bit位的值,并返回原始的值
+*@parm: bit 需要设置的值
+*@parm: n 第几个bit位*/
+int bit_put(struct bit_t *bit_set, int n, int bit) 
+{
+	int previous_value;
+	assert(bit_set);
+	assert(bit == 0 || bit == 1);
+	assert(n >= 0 && n < bit_set->length);
 
+	previous_value = bit_set->bytes[n/8]>>(n%8); //取得原始的值
+	if(bit == 1) {
+		bit_set->bytes[n/8] |= (0x1 << (n%8)); //制造一个掩码 n%8 为1, 其它bit值为0,然后,按位或
+	}else {
+	 	bit_set->bytes[n/8] &= (0x1 << (n%8));  //制造一个掩码 n%8 为0, 其它bit值为1,然后,按位与
+	}
+
+	return previous_value;
+}
+
+
+/*指定一个范围,将其中bit值置为1
+*@parm: low 低位
+*@parm: high 高位*/
+
+void bit_set(struct bit_t *bit_set, int low, int high)
+{
+	int i;  //用于遍历指定范围中的每个byte
+	int low_byte;
+	int high_byte;
+	
+	low_byte = low / 8;
+	high_byte = high / 8;
+	assert(bit_set);
+	assert(0 <= low && higth < bit_set->length);
+	assert(low <= high);
+	
+	if(low_byte < high_byte) {  //跨字节,指定范围不在同一个byte中
+		
+		                      //低范围的字节bit置位
+		
+		for(i = low_byte+1; i < high_byte; i++) {
+				
+		}
+		
+	}else {  //指定范围在同一个byte中
+	
+
+	}	
+	
+} 
 
 
 
