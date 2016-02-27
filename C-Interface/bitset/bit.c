@@ -17,6 +17,27 @@ struct bit_t {
 //计算len个bit位可以分割为多少个byte
 #define nbytes(len) ((((len) + 8-1) & (~8-1)) / 8)
 
+//低byte,置位时所需的掩码
+unsigned char low_byte_mask[] = {
+	0xFF,    /*1111 1111*/
+	0xFE,    /*1111 1110*/
+	0XFC,    /*1111 1100*/
+  0XF8,    /*1111 1000*/
+  0XF0,    /*1111 0000*/
+  0XE0,    /*1110 0000*/
+  0XC0,    /*1100 0000*/
+  0X80,    /*1000 0000*/
+	};
+
+//高byte, 置位时所需的掩码
+unsigned char high_byte_mask[] ={
+	0x01,     /*0000 0001*/
+	0x03,     /*0000 0011*/
+	0x07,     /*0000 0111*/
+	0x0F,     /*0000 1111*/
+	0x     
+	};
+
 //p必须是指针,type是类型
 #define NEW(p, len, type) do{\
 	p = (type)calloc(len, sizeof(*p));\
@@ -34,7 +55,7 @@ struct bit_t *bit_new(int length)
 	assert(length >= 0);
 	NEW(bit_set, 1, bit_t*);
 	if(length > 0) {
-		NEW(bit_set->words, length, unsigned long*);
+		NEW(bit_set->words, nwords(length), unsigned long*);
 	}else {
 		bit_set->words = NULL;		
 	}
@@ -145,22 +166,22 @@ int bit_put(struct bit_t *bit_set, int n, int bit)
 void bit_set(struct bit_t *bit_set, int low, int high)
 {
 	int i;  //用于遍历指定范围中的每个byte
-	int low_byte;
-	int high_byte;
+	int low_byte;  //低bit位所在的byte
+	int high_byte; //高bit位所在的byte
 	
 	low_byte = low / 8;
 	high_byte = high / 8;
 	assert(bit_set);
-	assert(0 <= low && higth < bit_set->length);
+	assert(0 <= low && high < bit_set->length);
 	assert(low <= high);
 	
 	if(low_byte < high_byte) {  //跨字节,指定范围不在同一个byte中
 		
-		                      //低范围的字节bit置位
-		
+		bit_set->bytes[low_byte] |= low_byte_mask[low%8];    //低byte置位
 		for(i = low_byte+1; i < high_byte; i++) {
-				
+				bit_set->bytes[i] = 0xFF;       //中间的byte全置位
 		}
+		bit_set->bytes[high_byte] 
 		
 	}else {  //指定范围在同一个byte中
 	
