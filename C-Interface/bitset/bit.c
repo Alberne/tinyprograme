@@ -21,21 +21,24 @@ struct bit_t {
 unsigned char low_byte_mask[] = {
 	0xFF,    /*1111 1111*/
 	0xFE,    /*1111 1110*/
-	0XFC,    /*1111 1100*/
-  0XF8,    /*1111 1000*/
-  0XF0,    /*1111 0000*/
-  0XE0,    /*1110 0000*/
-  0XC0,    /*1100 0000*/
-  0X80,    /*1000 0000*/
+	0xFC,    /*1111 1100*/
+  0xF8,    /*1111 1000*/
+  0xF0,    /*1111 0000*/
+  0xE0,    /*1110 0000*/
+  0xC0,    /*1100 0000*/
+  0x80    /*1000 0000*/
 	};
 
 //高byte, 置位时所需的掩码
-unsigned char high_byte_mask[] ={
+unsigned char high_byte_mask[] = {
 	0x01,     /*0000 0001*/
 	0x03,     /*0000 0011*/
 	0x07,     /*0000 0111*/
 	0x0F,     /*0000 1111*/
-	0x     
+	0x1F,     /*0001 1111*/
+	0x3F,     /*0011 1111*/
+	0x7F,     /*0111 1111*/
+	0xFF      /*1111 1111*/
 	};
 
 //p必须是指针,type是类型
@@ -181,16 +184,42 @@ void bit_set(struct bit_t *bit_set, int low, int high)
 		for(i = low_byte+1; i < high_byte; i++) {
 				bit_set->bytes[i] = 0xFF;       //中间的byte全置位
 		}
-		bit_set->bytes[high_byte] 
+		bit_set->bytes[high_byte] |= high_byte_mask[high%8]; //高byte  
 		
 	}else {  //指定范围在同一个byte中
-	
-
+		bit_set->bytes[low_byte] |= (low_byte_mask[low%8]) & (high_byte_mask[high%8]);
 	}	
 	
 } 
 
 
-
+/*指定一个范围，将其中的bit位清零
+* @parm: low 地位
+* @parm: hign 高位*/
+	
+void bit_clear(struct bit_t *bit_set, int low, int high)
+{
+	int i;  //用于遍历指定范围中的每个byte
+	int low_byte;  //低bit位所在的byte
+	int high_byte; //高bit位所在的byte
+	
+	low_byte = low / 8;
+	high_byte = high / 8;
+	assert(bit_set);
+	assert(0 <= low && high < bit_set->length);
+	assert(low <= high);
+	
+	if(low_byte < high_byte) {  //跨字节,指定范围不在同一个byte中
+		
+		bit_set->bytes[low_byte] &= ~low_byte_mask[low%8];    //低byte置位
+		for(i = low_byte+1; i < high_byte; i++) {
+				bit_set->bytes[i] = 0x00;       //中间的byte全置位
+		}
+		bit_set->bytes[high_byte] &= ~high_byte_mask[high%8]; //高byte  
+		
+	}else {  //指定范围在同一个byte中
+		bit_set->bytes[low_byte] &= ~(low_byte_mask[low%8]) & (high_byte_mask[high%8]);
+	}
+}
 
 
