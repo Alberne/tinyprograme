@@ -7,7 +7,7 @@
 struct bit_t {
 	int length; //位向量的个数
 	unsigned char *bytes; //存储bit的字节
-	unsigned long *words; //指向bytes的内存区域
+	unsigned long *words; //指向bytes的内存区域,改字段用于bit set比较函数
 };
 
 //每个unsigned long中包含的bit数
@@ -223,3 +223,33 @@ void bit_clear(struct bit_t *bit_set, int low, int high)
 }
 
 
+/*指定的一个范围，将其中的bit取反
+* @parm: low 地位
+* @parm: high 高位*/
+	
+void bit_not(struct bit_t *bit_set, int low, int high) 
+{
+	int i;  //用于遍历指定范围中的每个byte
+	int low_byte;  //低bit位所在的byte
+	int high_byte; //高bit位所在的byte
+	
+	low_byte = low / 8;
+	high_byte = high / 8;
+	assert(bit_set);
+	assert(0 <= low && high < bit_set->length);
+	assert(low <= high);
+	
+	if(low_byte < high_byte) {  //跨字节,指定范围不在同一个byte中
+		
+		bit_set->bytes[low_byte] ^= low_byte_mask[low%8];    //低byte,按位异或，相同为0，不同为1
+		for(i = low_byte+1; i < high_byte; i++) {
+				bit_set->bytes[i] ^= 0xFF;       //中间的byte全置位
+		}
+		bit_set->bytes[high_byte] ^= high_byte_mask[high%8]; //高byte  
+		
+	}else {  //指定范围在同一个byte中
+		bit_set->bytes[low_byte] ^= (low_byte_mask[low%8]) & (high_byte_mask[high%8]);
+	}	
+	
+	
+}
