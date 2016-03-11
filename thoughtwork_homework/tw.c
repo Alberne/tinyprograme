@@ -26,7 +26,6 @@ static unsigned int hashcode(const void *member)
 	h = 0;
 	for(i = 0; i < bar_code_len; i++) 
 		h = 31 * h + val[i];
-
 	return h;
 }
 
@@ -39,8 +38,8 @@ struct sales_promotion *get_promotion()
     	struct set_t *pset; //临时变量
     	int i;  
     	static struct sales_products discount_promotion[] = { //折扣商品信息
-		{"ITEM00001", 1},
-		{"ITEM00002", 1}
+		{"ITEM00002", 1},
+		{"ITEM00001", 1}
 		//{"ITEM00003", 0},
 		//{"ITEM00004", 0}
 	};
@@ -56,7 +55,7 @@ struct sales_promotion *get_promotion()
         /*假设当前有以下两种活动*
          *  1. 买二送一活动
          *  2. 9.5折优惠 */
-    	promotions->priority = DISCOUNT;  //当某种商品满足两种优惠时，优先选则活动一
+    	promotions->priority = FREE_ONE;  //当某种商品满足两种优惠时，优先选则活动一
      
         /*首先设置优惠活动1信息*/
      	PNEW(p, 1, struct promotion_one_info *);
@@ -94,9 +93,9 @@ static struct set_t *get_products()
 	static struct set_t *product_set;
 	int i;
 	static struct product_detail products[] = {
-		{"ITEM00001", "橘子", 10, "斤", "水果"},
-		{"ITEM00002", "苹果", 100, "斤", "水果"},
-		{"ITEM00003", "香蕉", 3.5, "斤", "水果"},
+		{"ITEM00001", "可口可乐", 3, "瓶", "饮料"},
+		{"ITEM00002", "苹果", 5.5, "斤", "水果"},
+		{"ITEM00003", "羽毛球", 1, "个", "体育用品"},
 		{"ITEM00004", "柚子", 10.5, "斤", "水果"},
 		{"ITEM00005", "瓜子", 99, "斤", "干果"},
 		{"ITEM00006", "麻子", 19.5, "斤", "干果"},
@@ -120,10 +119,9 @@ int main(int argc, char *argv[]) {
 	struct set_t *products; //库存商品集合 
 	struct sales_promotion *product_promotion; //优惠活动信息
 	char shopping[] = "[\
-				'ITEM00001',\
+				'ITEM00001-3',\
 				'ITEM00002-2',\
-				'ITEM00003-3',\
-				'ITEM00004-4'\
+				'ITEM00003-6'\
 			]"; /*购物车商品*/
 	
 	
@@ -230,19 +228,19 @@ void print_title()
 }
 void print_tail(float saveing, float consume)
 {
-	printf("总计:%.1f(元)\n", consume);
+	printf("总计:%.2f(元)\n", consume);
 	if(saveing) {
-		printf("节省:%.1f(元)\n",saveing);
+		printf("节省:%.2f(元)\n",saveing);
 	}
 	printf("******************************\n");
 }
 void free_one_print(free_one_list list)
 {
 	free_one_list p;
+	printf("--------------------\n");
+
 	if (!list)
 		return;
-
-	printf("--------------------\n");
 	printf("买二赠一商品\n");
 
 	for( ;list; ) {
@@ -291,8 +289,8 @@ void settle_product_print(const void *member, void *c, float *c1, float *c2)
 	printf("名称:%s,",product->name);
 	printf("数量:%d",count);
 	printf("%s,",product->unit);
-	printf("单价:%.1f(元),",price);
-	printf("小记:%.1f(元)\n", money);
+	printf("单价:%.2f(元),",price);
+	printf("小记:%.2f(元)\n", money);
 
 	(*c1) += money; //更新消费总计
 }
@@ -344,7 +342,7 @@ void settle_free_one(struct set_t *store, struct set_t *free_one_set,\
 *@parm: c 库存商品集合
 *@parm: c1 总计金额
 *@parm: c2 节省金额
-*@parm: c3 赠送商品列表*/
+**/
 void settle_free_one_print(const void *member, void *c, float *c1, float *c2)
 {
 	struct product_detail *product;
@@ -376,8 +374,8 @@ void settle_free_one_print(const void *member, void *c, float *c1, float *c2)
 	printf("名称:%s,",product->name);
 	printf("数量:%u",count);
 	printf("%s,",product->unit);
-	printf("单价:%.1f(元),",price);
-	printf("小记:%.1f(元)\n", money);
+	printf("单价:%.2f(元),",price);
+	printf("小记:%.2f(元)\n", money);
 
 	(*c1) += money; //更新消费总计
 	(*c2) += save_money; //更新节省总结
@@ -457,9 +455,9 @@ void settle_discount_print(const void *member, void *c, float *c1, float *c2)
 	printf("名称:%s,",product->name);
 	printf("数量:%u",count);
 	printf("%s,",product->unit);
-	printf("单价:%.1f(元),",price);
-	printf("小记:%.1f(元)", money);
-	printf("节省%.1f(元)\n",save_money);
+	printf("单价:%.2f(元),",price);
+	printf("小记:%.2f(元)", money);
+	printf("节省%.2f(元)\n",save_money);
 
 	(*c1) += money; //更新消费总计
 	(*c2) += save_money; //更新节省总结
