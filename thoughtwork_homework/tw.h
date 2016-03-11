@@ -54,7 +54,7 @@ typedef struct free_one_list{
 /*---------------打印小票模块  ----------------------*/
 
 void prase_JSON_array(const char *value, void *c1,\
-							void apply(int, char*, void *)); //解析json格式中的数组，
+			void apply(int, char*, void *)); //解析json格式中的数组，
 
 static const char *parse_value(char const *item, int *n, char **value);//解析商品条形码
 static const char *skip(const char *str); //utility to jump whitespace and cr/1f
@@ -93,8 +93,8 @@ void settle_discount_print(const void *member, void *c, float *c1, float *c2);
 *@parm: saveing 节省金额总计
 **/
 void settle_free_one(struct set_t *store, struct set_t *free_one_set,\
-							struct set_t *double_set, float *saveing,\
-								float *consume);
+			struct set_t *double_set, float *saveing,\
+						float *consume);
 
 /*买二送一活动计算，并打印小票信息
 *@parm: member 商品条形码信息
@@ -110,9 +110,9 @@ void settle_free_one_print(const void *member, void *c, float *c1, float *c2);
 *@parm: saveing 节省金额总计
 *@parm: consume 消费金额总计
 **/
-void settle_double_promotion(struct set_t *store, enum promotion_category type,
-							struct set_t *products, float *saveing,\
-								float *consume);
+void settle_double_promotion(struct set_t *store, enum promotion_category type,\
+				struct set_t *products, float *saveing,\
+							float *consume);
 
 /*没有优惠的商品结算
 *@parm: store 库存商品
@@ -120,7 +120,7 @@ void settle_double_promotion(struct set_t *store, enum promotion_category type,
 *@parm: saveing 节省总计
 *@parm: consume 消费总计*/
 void settle_product(struct set_t *store, struct set_t *products,\
-					 float *saveing, float *consume);
+			 float *saveing, float *consume);
 
 /* 不享受优惠活动的商品计算，并打印小票
 *@parm: member 商品条形码信息
@@ -129,13 +129,14 @@ void settle_product(struct set_t *store, struct set_t *products,\
 *@parm: c2 节省金额
 **/
 void settle_product_print(const void *member, void *c, float *c1,\
-						  float *c2);
+					  float *c2);
 
 /*赠送商品列表打印*/
 void free_one_print(free_one_list list);
 /*小票末尾信息打印*/
 void print_tail(float saveing, float consume);
-
+/*小票头部信息打印*/
+void print_title();
 /*---------------打印小票模块 END---------------------*/
 
 #endif
