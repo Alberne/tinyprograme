@@ -53,13 +53,12 @@ struct sales_promotion *get_promotion()
     	PNEW(promotions, 1, struct sales_promotion *);
 	promotions->promotion_all_info = NULL;
 	
-    	puts("--------通过收银系统设置优惠活动--------\n");
-    /*假设当前有以下两种活动*
-    *  1. 买二送一活动
-    *  2. 9.5折优惠 */
+        /*假设当前有以下两种活动*
+         *  1. 买二送一活动
+         *  2. 9.5折优惠 */
     	promotions->priority = DISCOUNT;  //当某种商品满足两种优惠时，优先选则活动一
      
-     /*首先设置优惠活动1信息*/
+        /*首先设置优惠活动1信息*/
      	PNEW(p, 1, struct promotion_one_info *);
      	p->next_promotion = promotions->promotion_all_info;
      	promotions->promotion_all_info = p;
@@ -226,7 +225,7 @@ void pay(struct set_t *store, struct sales_promotion *promotions, struct set_t *
 
 void print_title()
 {
-	printf("***<没钱赚商店>购物清单***\n");
+	printf("******<没钱赚商店>购物清单******\n");
 	
 }
 void print_tail(float saveing, float consume)
@@ -235,7 +234,7 @@ void print_tail(float saveing, float consume)
 	if(saveing) {
 		printf("节省:%.1f(元)\n",saveing);
 	}
-	printf("******************************");
+	printf("******************************\n");
 }
 void free_one_print(free_one_list list)
 {
@@ -243,7 +242,7 @@ void free_one_print(free_one_list list)
 	if (!list)
 		return;
 
-	printf("\n--------------------\n");
+	printf("--------------------\n");
 	printf("买二赠一商品\n");
 
 	for( ;list; ) {
@@ -253,7 +252,7 @@ void free_one_print(free_one_list list)
 		list = p->next;
 		free(p);
 	}
-	printf("\n--------------------\n");
+	printf("--------------------\n");
 }
 
 /*没有优惠的商品结算
@@ -290,7 +289,8 @@ void settle_product_print(const void *member, void *c, float *c1, float *c2)
 	price = product->unit_price;
 	money = price * count;
 	printf("名称:%s,",product->name);
-	printf("数量:%d,",count);
+	printf("数量:%d",count);
+	printf("%s,",product->unit);
 	printf("单价:%.1f(元),",price);
 	printf("小记:%.1f(元)\n", money);
 
@@ -374,7 +374,8 @@ void settle_free_one_print(const void *member, void *c, float *c1, float *c2)
 	put_free_one_list(product->name, free_count);
 
 	printf("名称:%s,",product->name);
-	printf("数量:%u,",count);
+	printf("数量:%u",count);
+	printf("%s,",product->unit);
 	printf("单价:%.1f(元),",price);
 	printf("小记:%.1f(元)\n", money);
 
@@ -454,7 +455,8 @@ void settle_discount_print(const void *member, void *c, float *c1, float *c2)
 	save_money = (count * price) - money;
 	assert(product && sales);
 	printf("名称:%s,",product->name);
-	printf("数量:%u,",count);
+	printf("数量:%u",count);
+	printf("%s,",product->unit);
 	printf("单价:%.1f(元),",price);
 	printf("小记:%.1f(元)", money);
 	printf("节省%.1f(元)\n",save_money);
