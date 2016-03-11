@@ -20,7 +20,7 @@ static int compare_product(const void *x, const void *y)
 static unsigned int hashcode(const void *member) 
 {
 	unsigned int h;
-    int i;
+        int i;
 	const char *val;
 	val = (const char *)member;
 	h = 0;
@@ -34,11 +34,11 @@ static unsigned int hashcode(const void *member)
 //设置优惠活动 
 struct sales_promotion *get_promotion() 
 {
-    static struct sales_promotion *promotions;
-    struct promotion_one_info *p; //临时变量  
-    struct set_t *pset; //临时变量
-	int i;  
-    static struct sales_products discount_promotion[] = { //折扣商品信息
+	static struct sales_promotion *promotions;
+        struct promotion_one_info *p; //临时变量  
+    	struct set_t *pset; //临时变量
+    	int i;  
+    	static struct sales_products discount_promotion[] = { //折扣商品信息
 		{"ITEM00001", 1},
 		{"ITEM00002", 1}
 		//{"ITEM00003", 0},
@@ -50,33 +50,33 @@ struct sales_promotion *get_promotion()
 		//{"ITEM00003", 0}
 	};
 	 
-    PNEW(promotions, 1, struct sales_promotion *);
+    	PNEW(promotions, 1, struct sales_promotion *);
 	promotions->promotion_all_info = NULL;
 	
-    puts("--------通过收银系统设置优惠活动--------\n");
+    	puts("--------通过收银系统设置优惠活动--------\n");
     /*假设当前有以下两种活动*
     *  1. 买二送一活动
     *  2. 9.5折优惠 */
-	promotions->priority = DISCOUNT;  //当某种商品满足两种优惠时，优先选则活动一
+    	promotions->priority = DISCOUNT;  //当某种商品满足两种优惠时，优先选则活动一
      
      /*首先设置优惠活动1信息*/
-	 PNEW(p, 1, struct promotion_one_info *);
-     p->next_promotion = promotions->promotion_all_info;
-	 promotions->promotion_all_info = p;
-	 p->type = FREE_ONE;
-     strcpy(p->statement, "买二送一活动");
-     pset = set_new(100, compare_product, hashcode);
-	 p->sales_set = pset; 
+     	PNEW(p, 1, struct promotion_one_info *);
+     	p->next_promotion = promotions->promotion_all_info;
+     	promotions->promotion_all_info = p;
+     	p->type = FREE_ONE;
+     	strcpy(p->statement, "买二送一活动");
+     	pset = set_new(100, compare_product, hashcode);
+     	p->sales_set = pset; 
 
-	 for(i = 0; i < array_len(one_free_promotion); i++) {
-		 set_put(pset, &one_free_promotion[i]);		 		 
-	 }
+     	for(i = 0; i < array_len(one_free_promotion); i++) {
+     		set_put(pset, &one_free_promotion[i]);		 		 
+     	}
  
-     /*其次设置优惠活动2信息*/ 
+     	/*其次设置优惠活动2信息*/ 
 	 PNEW(p, 1, struct promotion_one_info *); //分配活动2商品所需的内存
 	 //链表头插法
 	 p->next_promotion = promotions->promotion_all_info;
-     promotions->promotion_all_info = p;
+	 promotions->promotion_all_info = p;
 	 p->type = DISCOUNT;
 	 strcpy(p->statement, "9.5折优惠");
 	 pset = set_new(100, compare_product, hashcode);
@@ -92,8 +92,8 @@ struct sales_promotion *get_promotion()
 /*从收银系统取得商品信息*/ 
 static struct set_t *get_products()
 {
-    static struct set_t *product_set;
-    int i;
+	static struct set_t *product_set;
+	int i;
 	static struct product_detail products[] = {
 		{"ITEM00001", "橘子", 10, "斤", "水果"},
 		{"ITEM00002", "苹果", 100, "斤", "水果"},
@@ -107,10 +107,10 @@ static struct set_t *get_products()
 	
 	/*初始化商品信息集合*/
 	product_set = set_new(1024, compare_product, hashcode);
-    for(i = 0; i < array_len(products); i++) {
-        set_put(product_set, &products[i]);
-    }
-    return product_set;
+	for(i = 0; i < array_len(products); i++) {
+        	set_put(product_set, &products[i]);
+    	}
+	return product_set;
 }
 /*------------收银系统--end------------*/
 
@@ -121,11 +121,11 @@ int main(int argc, char *argv[]) {
 	struct set_t *products; //库存商品集合 
 	struct sales_promotion *product_promotion; //优惠活动信息
 	char shopping[] = "[\
-							'ITEM00001',\
-							'ITEM00002-2',\
-							'ITEM00003-3',\
-							'ITEM00004-4'\
-						]"; /*购物车商品*/
+				'ITEM00001',\
+				'ITEM00002-2',\
+				'ITEM00003-3',\
+				'ITEM00004-4'\
+			]"; /*购物车商品*/
 	
 	
 	struct set_t *shopping_set; //购物车商品集合
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
 	product_promotion = get_promotion();
     
 	//取得购物车商品集合,结算时需要
-    prase_JSON_array(shopping, shopping_set, pack_cart); 
+    	prase_JSON_array(shopping, shopping_set, pack_cart); 
 	 
 	//结算
 	pay(products, product_promotion, shopping_set);
@@ -184,6 +184,8 @@ void pay(struct set_t *store, struct sales_promotion *promotions, struct set_t *
 		pomo_info = pomo_info->next_promotion;
 	}/*while*/
 	
+	//打印小票头信息
+	print_title();
 	//计算没有优惠
 	settle_product(store, pure_goods, &cost_save, &expenditure);
 	//计算二重优惠
@@ -191,27 +193,27 @@ void pay(struct set_t *store, struct sales_promotion *promotions, struct set_t *
 
 	//计算一种优惠的商品,并结算
 	for (pomo_info = promotions->promotion_all_info;\
-				pomo_info; pomo_info = pomo_info->next_promotion){
+		pomo_info; pomo_info = pomo_info->next_promotion){
 		           
-					switch (pomo_info->type) {
+			switch (pomo_info->type) {
 					
-					case DISCOUNT: //95折扣
-							  temp1 = set_inter(pomo_info->sales_set,shopping);
-							  settle_discount(store, temp1, double_pomo_set, &cost_save, &expenditure);
-							  if(temp1)
-								  set_free(&temp1);
-							  break;
+			case DISCOUNT: //95折扣
+				temp1 = set_inter(pomo_info->sales_set,shopping);
+				settle_discount(store, temp1, double_pomo_set, &cost_save, &expenditure);
+				if(temp1)
+					set_free(&temp1);
+				 break;
 
-					case FREE_ONE: //买二送一
-                              temp1 = set_inter(pomo_info->sales_set,shopping);
-							  settle_free_one(store, temp1, double_pomo_set, &cost_save, &expenditure);
-							  if(temp1)
-								  set_free(&temp1);
-							  break;
-					default:
-						assert(!"no this promotion\n");
-						break;
-					}/*switch*/
+			case FREE_ONE: //买二送一
+                                temp1 = set_inter(pomo_info->sales_set,shopping);
+				settle_free_one(store, temp1, double_pomo_set, &cost_save, &expenditure);
+				if(temp1)
+					set_free(&temp1);
+				break;
+			default:
+				assert(!"no this promotion\n");
+				break;
+			}/*switch*/
 	}/*for*/
 	
 	//赠送商品列表打印
@@ -222,6 +224,11 @@ void pay(struct set_t *store, struct sales_promotion *promotions, struct set_t *
 
 }
 
+void print_title()
+{
+	printf("***<没钱赚商店>购物清单***\n");
+	
+}
 void print_tail(float saveing, float consume)
 {
 	printf("总计:%.1f(元)\n", consume);
@@ -255,7 +262,7 @@ void free_one_print(free_one_list list)
 *@parm: saveing 节省总计
 *@parm: consume 消费总计*/
 void settle_product(struct set_t *store, struct set_t *products,\
-					 float *saveing, float *consume)
+			 float *saveing, float *consume)
 {
 	if (products) {
 		set_map(products, settle_product_print, (void *)store, consume, saveing);
@@ -292,7 +299,7 @@ void settle_product_print(const void *member, void *c, float *c1, float *c2)
 
 /*多重优惠商品结算*/
 void settle_double_promotion(struct set_t *store, enum promotion_category type,
-							struct set_t *products, float *saveing,\
+					struct set_t *products, float *saveing,\
 								float *consume)
 {
 	if(type == FREE_ONE) {
@@ -312,8 +319,8 @@ void settle_double_promotion(struct set_t *store, enum promotion_category type,
 *@parm: saveing 节省金额总计
 **/
 void settle_free_one(struct set_t *store, struct set_t *free_one_set,\
-							struct set_t *double_set, float *saveing,\
-								float *consume)
+				struct set_t *double_set, float *saveing,\
+							float *consume)
 {
 	struct set_t *free_ones;
 	int i;
