@@ -2,22 +2,19 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <ctype.h>
-#include "list.h"
+#include <stdarg.h>
+#include "../C-Interface/list/list.h"
 
-#define DEBUG 0
-#define OPERAND_LEN  15  //²Ù×÷Êı×Ö½ÚÊı 
-#define OPERATOR_LEN 2   //²Ù×÷·û×Ô¼ºÊı 
+#define DEBUG 1 
+#define OPERAND_LEN  15  //æ“ä½œæ•°å­—èŠ‚æ•° 
+#define OPERATOR_LEN 2   //æ“ä½œç¬¦è‡ªå·±æ•° 
 
 #define PNEW(p, n) do{\
 	p = calloc(n, sizeof(*(p)));\
 	assert(p);\
 	}while(0) /*no trail ;*/
 
-typedef enum bool{
-	FALSE = 0,
-	TRUE = 1
-}bool;
-//È·¶¨²Ù×÷·ûµÄÓÅÏÈ¼¶
+//ç¡®å®šæ“ä½œç¬¦çš„ä¼˜å…ˆçº§
 int priority(char opr)
 {
 	switch(opr)
@@ -44,37 +41,37 @@ void print_list(List list, char *msg)
 		printf("%s,", *ar); 
 }
 
-/*½«ÖĞ×º±í´ïÊ½×ª»»³Éºó×º±í´ïÊ½ 
-*@parm: sexpr ÖĞ×º±í´ïÊ½
-*return: ´æ´¢ºó×º±í´ïÊ½µÄ¶ÓÁĞ  
+/*å°†ä¸­ç¼€è¡¨è¾¾å¼è½¬æ¢æˆåç¼€è¡¨è¾¾å¼ 
+*@parm: sexpr ä¸­ç¼€è¡¨è¾¾å¼
+*return: å­˜å‚¨åç¼€è¡¨è¾¾å¼çš„é˜Ÿåˆ—  
 **/
 List convert_postfix_expression(char *expr)
 {
-	List queue_exp; //ºó×º±í´ïÊ½¶ÓÁĞ,Ò²×÷Îª²Ù×÷Êı¶ÓÁĞ 
-	List stack_opr;       //ÔËËã·ûÕ» 
+	List queue_exp; //åç¼€è¡¨è¾¾å¼é˜Ÿåˆ—,ä¹Ÿä½œä¸ºæ“ä½œæ•°é˜Ÿåˆ— 
+	List stack_opr;       //è¿ç®—ç¬¦æ ˆ 
 	char temp[25];
 	int i;
 	char *pstr, *p;
 	
 	queue_exp = stack_opr = NULL;
-	while(*expr != '\0') { //É¨ÃèÕû¸öÖĞ×º±í´ïÊ½ 
+	while(*expr != '\0') { //æ‰«ææ•´ä¸ªä¸­ç¼€è¡¨è¾¾å¼ 
 		//isoperand = FALSE;
 		i = 0; 
 		
-		if(isdigit(*expr) || *expr == '.') { //ÊÇ²Ù×÷Êı(ÊµÊı) 
+		if(isdigit(*expr) || *expr == '.') { //æ˜¯æ“ä½œæ•°(å®æ•°) 
 			memset(temp, 0, sizeof(temp));
-			while(isdigit(*expr) || *expr == '.') {  //¿¼ÂÇ²Ù×÷ÊıÊÇ¶àÎ»µÄÇé¿ö 
+			while(isdigit(*expr) || *expr == '.') {  //è€ƒè™‘æ“ä½œæ•°æ˜¯å¤šä½çš„æƒ…å†µ 
 				temp[i++] = *expr++; 
 			}/*while*/
 			PNEW(pstr, i);
 			strcpy(pstr, temp);
-			queue_exp = list_push(queue_exp, pstr); //²Ù×÷ÊıÈë¶ÓÁĞ 
+			queue_exp = list_push(queue_exp, pstr); //æ“ä½œæ•°å…¥é˜Ÿåˆ— 
 		
-		}else { //ÊÇÔËËã·û 
+		}else { //æ˜¯è¿ç®—ç¬¦ 
 			PNEW(pstr, OPERATOR_LEN);
 			
 			switch(*expr) {
-				case '(':   //×óÀ¨ºÅÖ±½ÓÑ¹Èë²Ù×÷·ûÕ» 
+				case '(':   //å·¦æ‹¬å·ç›´æ¥å‹å…¥æ“ä½œç¬¦æ ˆ 
 					*pstr = '(';
 					stack_opr = list_push(stack_opr, pstr);
 					break;
@@ -83,32 +80,32 @@ List convert_postfix_expression(char *expr)
 				case '-':
 				case '*':
 				case '/': 
-					if(list_length(stack_opr)) {//²Ù×÷·ûÓÅÏÈ¼¶±È½Ï 
-						//µ±Ç°ÔËËã·û,Ğ¡ÓÚÕ»¶¥ÔËËã·û 
+					if(list_length(stack_opr)) {//æ“ä½œç¬¦ä¼˜å…ˆçº§æ¯”è¾ƒ 
+						//å½“å‰è¿ç®—ç¬¦,å°äºæ ˆé¡¶è¿ç®—ç¬¦ 
 						while(priority(*expr) <= priority(*((char *)stack_opr->ptr))) {
-							stack_opr = list_pop(stack_opr, &p); //È¡³öÓÅÏÈ¼¶¸ßµÄÕ»¶¥ÔËËã·û
-							queue_exp = list_push(queue_exp, p); //Èë¶Ó 
+							stack_opr = list_pop(stack_opr, &p); //å–å‡ºä¼˜å…ˆçº§é«˜çš„æ ˆé¡¶è¿ç®—ç¬¦
+							queue_exp = list_push(queue_exp, p); //å…¥é˜Ÿ 
 							
 							if(list_length(stack_opr) == 0) 
-								break; //Èç¹ûÕ»¶¥Îª¿Õ,ÍË³öwhile 
+								break; //å¦‚æœæ ˆé¡¶ä¸ºç©º,é€€å‡ºwhile 
 						}/*while*/
 					}/*if*/
 					
-					//µ±Ç°ÔËËã·û½øÕ» 
+					//å½“å‰è¿ç®—ç¬¦è¿›æ ˆ 
 					*pstr = *expr;
 					stack_opr = list_push(stack_opr, pstr);
 					break;
 					
 				case ')':
-					/*È¡³öÔËËã·ûÕ»ÖĞ×óĞ¡À¨ºÅÒÔ
-					ÉÏµÃÈ«²¿ÔËËã·ûÑ¹Èë²Ù×÷·û¶ÓÁĞÖĞ */
+					/*å–å‡ºè¿ç®—ç¬¦æ ˆä¸­å·¦å°æ‹¬å·ä»¥
+					ä¸Šå¾—å…¨éƒ¨è¿ç®—ç¬¦å‹å…¥æ“ä½œç¬¦é˜Ÿåˆ—ä¸­ */
 					while(*((char *)stack_opr->ptr) != '(') {
-						stack_opr = list_pop(stack_opr, &p);  //³öÕ» 
-						queue_exp = list_push(queue_exp, p); //Èë¶Ó 
+						stack_opr = list_pop(stack_opr, &p);  //å‡ºæ ˆ 
+						queue_exp = list_push(queue_exp, p); //å…¥é˜Ÿ 
 						
 					}/*while*/
 					
-					stack_opr = list_pop(stack_opr, &p); //¶ªµô'(' 
+					stack_opr = list_pop(stack_opr, &p); //ä¸¢æ‰'(' 
 					free(p);
 					break;
 					
@@ -127,10 +124,10 @@ List convert_postfix_expression(char *expr)
 		#endif
 	}/*while*/
 	
-	//½«²Ù×÷·ûÈ«²¿Ñ¹Èë²Ù×÷Êı¶ÓÁĞÖĞ
+	//å°†æ“ä½œç¬¦å…¨éƒ¨å‹å…¥æ“ä½œæ•°é˜Ÿåˆ—ä¸­
 	while(list_length(stack_opr)) {
-		stack_opr = list_pop(stack_opr, &p);  //³öÕ» 
-		queue_exp = list_push(queue_exp, p); //Èë¶Ó
+		stack_opr = list_pop(stack_opr, &p);  //å‡ºæ ˆ 
+		queue_exp = list_push(queue_exp, p); //å…¥é˜Ÿ
 	} 
 	#if DEBUG
 	print_list(queue_exp, "queue");
@@ -143,12 +140,12 @@ List convert_postfix_expression(char *expr)
 
 
 
-/*¼ÆËãºó×º±í´ïÊ½µÄÖµ*/
+/*è®¡ç®—åç¼€è¡¨è¾¾å¼çš„å€¼*/
 
 float caculate(List queue_postfix)
 {
-	List stack_sum;  //Õ»£¬´æ´¢²Ù×÷Êı 
-	float f1, f2; //¶şÔªÔËËã·ûÁ½±ßµÄ²Ù×÷Êı 
+	List stack_sum;  //æ ˆï¼Œå­˜å‚¨æ“ä½œæ•° 
+	float f1, f2; //äºŒå…ƒè¿ç®—ç¬¦ä¸¤è¾¹çš„æ“ä½œæ•° 
 	char *p, *psum;
 	
 	psum = p = NULL;
@@ -159,26 +156,26 @@ float caculate(List queue_postfix)
 	print_list(queue_postfix, "postfix_queue");
 	#endif
 	
-	//ÄæÖÃ¶ÓÁĞºó¿ÉÒÔÊ¹ÓÃpop()·½·¨È¡¶ÓÎ²ÔªËØ 
+	//é€†ç½®é˜Ÿåˆ—åå¯ä»¥ä½¿ç”¨pop()æ–¹æ³•å–é˜Ÿå°¾å…ƒç´  
 	queue_postfix = list_reverse(queue_postfix); 
 	
 	#if DEBUG
 	print_list(queue_postfix, "postfix_queue");
 	#endif
 	
-	//Ñ­»·±éÀú¶ÓÁĞÔªËØ 
+	//å¾ªç¯éå†é˜Ÿåˆ—å…ƒç´  
 	while(list_length(queue_postfix)) {
-		queue_postfix = list_pop(queue_postfix, &p); //È¡³ö¶ÓÎ²ÔªËØ
+		queue_postfix = list_pop(queue_postfix, &p); //å–å‡ºé˜Ÿå°¾å…ƒç´ 
 		
-		if((isdigit(*p)) || (*p == '.')) { //²Ù×÷Êı 
-			stack_sum = list_push(stack_sum, p);  //Ñ¹Õ» 
-		}else { //ÔËËã·û 
+		if((isdigit(*p)) || (*p == '.')) { //æ“ä½œæ•° 
+			stack_sum = list_push(stack_sum, p);  //å‹æ ˆ 
+		}else { //è¿ç®—ç¬¦ 
 			stack_sum = list_pop(stack_sum, &psum);
-			f2 = atof(psum);  //²ÎÓëÔËËãµÄµÚ¶ş¸ö²Ù×÷Êı 
+			f2 = atof(psum);  //å‚ä¸è¿ç®—çš„ç¬¬äºŒä¸ªæ“ä½œæ•° 
 			free(psum);
 			psum = NULL;
 			stack_sum = list_pop(stack_sum, &psum);
-			f1 = atof(psum);  //²ÎÓëÔËËãµÄµÚÒ»¸ö²Ù×÷Êı
+			f1 = atof(psum);  //å‚ä¸è¿ç®—çš„ç¬¬ä¸€ä¸ªæ“ä½œæ•°
 			free(psum);
 			psum = NULL;
 			
@@ -197,7 +194,7 @@ float caculate(List queue_postfix)
 					
 				case '/':
 					if(f2 == 0)
-						assert(!"div by zero error\n");  //³ı0´íÎó 
+						assert(!"div by zero error\n");  //é™¤0é”™è¯¯ 
 					
 					f1 /= f2; 
 					break;
@@ -208,22 +205,70 @@ float caculate(List queue_postfix)
 			}/*switch*/ 
 			 PNEW(psum, OPERAND_LEN);
 			 sprintf(psum, "%f", f1);
-			 stack_sum = list_push(stack_sum, psum); //½«¼ÆËã½á¹ûÑ¹Õ» 
+			 stack_sum = list_push(stack_sum, psum); //å°†è®¡ç®—ç»“æœå‹æ ˆ 
 		}/*else*/ 
 					 
 	}/*while*/
-	stack_sum = list_pop(stack_sum, &psum); //½«×îºóµÄ¼ÆËã½á¹û³öÕ»
+	stack_sum = list_pop(stack_sum, &psum); //å°†æœ€åçš„è®¡ç®—ç»“æœå‡ºæ ˆ
 	return atof(psum);
 
 } 
 
-int main(int argc, char *argv[]) {
-	List list;
-	float ret;
-	static char *ex = "(1+2.1)*3.5"; 
-	list = convert_postfix_expression(ex);
+
+void calculate_exp(char *exp, ...)
+{
+	char temp[250];
+	char *exp1, *p; //è½¬æ¢åçš„ç”¨æˆ·è‡ªå®šä¹‰è¡¨è¾¾å¼
+	char *pexp;
+	int len;
+	int i;
+	va_list ap;
+	float val;
+        List list;
+        float ret;
+	
+	pexp = exp;
+	i = val = ret = 0;
+	len = strlen(exp);
+	va_start(ap, exp);
+	PNEW(p, (len * 4));
+	exp1 = p;
+	for( ; *exp && (*exp != '\0'); ) {//å¾ªç¯éå†è¡¨è¾¾å¼
+		
+		if(isalpha(*exp)) {  //è‡ªå®šä¹‰å‡½æ•°è¡¨è¾¾å¼
+			
+        		val = va_arg(ap, double);
+			assert(val);
+			memset(temp, 0, sizeof(temp));
+			sprintf(temp, "%.2f", val);
+			//strcpy(exp1, temp);
+			i = strlen(temp);
+			strncpy(exp1, temp, i);
+			exp1 += i;
+			
+			while((*exp++) != ')')
+				; //è·³è¿‡è‡ªå®šä¹‰å‡½æ•°å­—ç¬¦,')'ä½œä¸ºç»“æŸæ ‡å¿—
+				
+		}else { 
+			*exp1++ = *exp++;
+		}	
+			
+	}/*for*/
+	va_end(ap);	
+	#if DEBUG
+	printf("%s\n", p);
+	#endif
+	list = convert_postfix_expression(p);
 	ret = caculate(list);
-	printf("%s = %.2f\n",ex, ret);
-	return 0;
+	printf("\n%s = %.2f\n",pexp, ret);
 }
 
+
+int main(int argc, char *argv[]) {
+	List list;
+	float ret = 3;
+	static char *ex = "(1+2.1)*3.5"; 
+	calculate_exp(argv[1],ret);
+	
+	return 0;
+}
