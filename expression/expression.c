@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include "../C-Interface/list/list.h"
+#include "expression.h"
 
 #define DEBUG 1 
 #define OPERAND_LEN  15  //操作数字节数 
