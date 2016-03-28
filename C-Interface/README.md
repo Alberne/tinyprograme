@@ -26,7 +26,7 @@ ______________________
 
 
 ###list
->**list(单链表)**:[list.c](/C-Interface/list/list.c "")提供了一些常用的实现
+>**list(单链表)**:[list.c](/C-Interface/list/list.c "")提供了一些通用的实现,根据list提供的接口可以实现*`队列`*,*`栈`*,*`链表`*数据结构.
 
 ![list](/C-Interface/list/list.jpg "快照")
 
